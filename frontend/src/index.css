@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  @apply text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300;
+}
