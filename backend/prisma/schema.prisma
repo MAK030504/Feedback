@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FeedbackType {
+  complaint
+  suggestion
+  feedback
+}
+
+enum FeedbackCategory {
+  event_management
+  team_coordination
+  leadership_issue
+  technical_workshop
+  communication
+  other
+}
+
+enum FeedbackStatus {
+  pending
+  under_review
+  resolved
+  rejected
+}
+
+enum FeedbackPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum MessageSender {
+  admin
+  user
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Feedback {
+  id             Int              @id @default(autoincrement())
+  ticketId        String           @unique
+  secretToken     String
+  type            FeedbackType
+  category        FeedbackCategory
+  title           String
+  description     String
+  status          FeedbackStatus   @default(pending)
+  priority        FeedbackPriority @default(medium)
+  isPublic        Boolean          @default(false)
+  anonymousAlias  String
+  hashedIp        String?
+  internalNotes   String?
+  aiFlags         Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  messages        Message[]
+  attachments     Attachment[]
+  suggestionVotes SuggestionVote[]
+
+  @@index([status, category, type])
+  @@index([createdAt])
+}
+
+model Message {
+  id              Int           @id @default(autoincrement())
+  feedbackId      Int
+  sender          MessageSender
+  message         String
+  isPublicComment Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  feedback        Feedback      @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackId, createdAt])
+}
+
+model Attachment {
+  id         Int      @id @default(autoincrement())
+  feedbackId Int
+  url        String
+  fileType   String
+  createdAt  DateTime @default(now())
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+}
+
+model SuggestionVote {
+  id         Int      @id @default(autoincrement())
+  feedbackId Int
+  voteHash   String
+  createdAt  DateTime @default(now())
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackId, voteHash])
+}
