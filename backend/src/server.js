@@ -37,7 +37,7 @@ const start = async () => {
     await prisma.$connect();
     await ensureAdminSeeded();
 
-    httpServer.listen(env.PORT, () => {
+    httpServer.listen(env.PORT, "0.0.0.0", () => {
       // eslint-disable-next-line no-console
       console.log(`MLSA backend running on port ${env.PORT}`);
     });
