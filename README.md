@@ -171,10 +171,6 @@ You can replace scaffold logic with an external AI moderation provider later.
 
 ## Deployment
 
-Neon is the database. Deploy the API and frontend separately:
+Free-tier stack: **Neon** (DB) + **Fly.io** (API) + **Vercel** (frontend). Alternatives: Koyeb, Cloudflare Pages — see **[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
-1. **API** — [Render](https://render.com) using [`render.yaml`](render.yaml) (root: `backend`)
-2. **Frontend** — [Vercel](https://vercel.com) (root: `frontend`, env: `VITE_API_URL`, `VITE_SOCKET_URL`)
-3. Set `CORS_ORIGIN` on the API to your Vercel URL
-
-Full walkthrough: **[docs/DEPLOY.md](docs/DEPLOY.md)**
+Quick API deploy: `cd backend && fly launch && fly secrets set ... && fly deploy`

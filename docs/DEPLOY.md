@@ -1,141 +1,197 @@
-# Deploy MLSA Feedback
+# Deploy MLSA Feedback (free tier)
 
-Recommended stack (free tier friendly):
+Your app needs a **always-on or wakeable Node process** (Express + Socket.IO). Pure serverless (Vercel/Netlify functions) is **not** suitable for the API.
 
-| Part | Service | Why |
-|------|---------|-----|
-| Database | [Neon](https://neon.tech) | Already configured |
-| API + WebSockets | [Render](https://render.com) | Node + Socket.IO |
-| Frontend | [Vercel](https://vercel.com) | Vite/React static hosting |
+## Recommended free stack
 
-Deploy **backend first**, then frontend, then set `CORS_ORIGIN` on the API to match the frontend URL.
+| Part | Service | Free tier notes |
+|------|---------|-----------------|
+| Database | [Neon](https://neon.tech) | Generous free Postgres (you already use this) |
+| **API** | **[Fly.io](https://fly.io)** | Small VM, WebSockets OK, `backend/fly.toml` included |
+| **Frontend** | **[Vercel](https://vercel.com)** or **[Cloudflare Pages](https://pages.cloudflare.com)** | Static Vite build, free |
+
+Deploy **API first** → **frontend** → set `CORS_ORIGIN` on the API.
+
+---
+
+## Free API alternatives (instead of Render)
+
+| Host | Good for this app? | Free tier reality |
+|------|-------------------|-------------------|
+| **[Fly.io](https://fly.io)** ⭐ | Yes — WebSockets, Docker, Neon | Allowance-based; 1 small VM can run 24/7 within free credits |
+| **[Koyeb](https://koyeb.com)** | Yes — Git deploy, WebSockets | 1 free **Nano** web service per account |
+| **[Oracle Cloud](https://www.oracle.com/cloud/free/)** | Yes — full VPS | Always-free ARM VM; more setup (SSH, PM2/nginx) |
+| **Render** | Yes | Free tier **sleeps** (~30s cold start) — fine but annoying |
+| **Railway** | Yes | ~$5 trial credit, then paid — not long-term free |
+| **Vercel / Netlify** (API only) | No | No persistent Socket.IO server |
+
+**Avoid for API:** Vercel serverless, Netlify functions, Cloudflare Workers (unless you drop Socket.IO live updates).
 
 ---
 
 ## 0. Prerequisites
 
-- Git repo pushed to GitHub
-- Neon `DATABASE_URL` (pooled) and `DIRECT_URL` (direct)
-- Strong secrets ready (do **not** use dev defaults in production):
+- Repo on GitHub
+- Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (direct)
+- Strong production secrets (32+ char `JWT_SECRET`, 12+ char `ADMIN_PASSWORD`, unique `IP_HASH_SALT`)
 
 ```bash
-# Example: generate secrets locally
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ---
 
-## 1. Deploy API on Render
+## 1. Deploy API on Fly.io (recommended)
 
-### Option A — Blueprint (fastest)
+### Install CLI
 
-1. [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**
-2. Connect this repo; Render reads `render.yaml`
-3. Set **secret** env vars when prompted (or after create):
+- Windows: `irm https://fly.io/install.ps1 | iex`
+- macOS/Linux: `curl -L https://fly.io/install.sh | sh`
 
-| Variable | Value |
-|----------|--------|
-| `DATABASE_URL` | Neon **pooled** connection string |
-| `DIRECT_URL` | Neon **direct** connection string |
-| `ADMIN_USERNAME` | e.g. `mlsa-admin` |
-| `ADMIN_PASSWORD` | Strong password (12+ chars) |
-| `CORS_ORIGIN` | Temporary `http://localhost:5173` — update after step 2 |
-| `JWT_SECRET` | 32+ char random string (or use Render generated) |
-| `IP_HASH_SALT` | 16+ char random string (or use Render generated) |
+**Windows: `fly` not found?** Fully **quit and reopen Cursor** so PATH reloads. Or use the repo wrapper from `backend/`:
 
-4. Wait for deploy; note the URL, e.g. `https://mlsa-feedback-api.onrender.com`
-5. Check health: `https://mlsa-feedback-api.onrender.com/health` → `{"status":"ok"}`
-
-Build runs `npm run db:deploy` so migrations apply on each deploy.
-
-### Option B — Manual Web Service
-
-1. **New** → **Web Service** → connect repo
-2. **Root directory:** `backend`
-3. **Build command:** `npm install && npm run db:deploy`
-4. **Start command:** `npm start`
-5. **Health check path:** `/health`
-6. Add the same env vars as above
-
-### Render notes
-
-- Free tier sleeps after inactivity; first request may be slow (~30s).
-- `PORT` is set by Render automatically.
-- Attachments need Cloudinary env vars; otherwise submissions work without files.
-
----
-
-## 2. Deploy frontend on Vercel
-
-1. [Vercel](https://vercel.com) → **Add New Project** → import repo
-2. **Root directory:** `frontend`
-3. **Framework preset:** Vite
-4. **Environment variables:**
-
-| Variable | Example |
-|----------|---------|
-| `VITE_API_URL` | `https://mlsa-feedback-api.onrender.com/api` |
-| `VITE_SOCKET_URL` | `https://mlsa-feedback-api.onrender.com` |
-
-5. Deploy; note the URL, e.g. `https://mlsa-feedback.vercel.app`
-
-`vercel.json` rewrites all routes to `index.html` for React Router.
-
----
-
-## 3. Link frontend ↔ API (CORS)
-
-In **Render** → your API service → **Environment**:
-
-```env
-CORS_ORIGIN=https://mlsa-feedback.vercel.app
+```powershell
+.\scripts\fly.ps1 version
+.\scripts\fly.ps1 auth login
 ```
 
-No trailing slash. Save → Render redeploys.
+Or fix only the current terminal:
 
-Test:
+```powershell
+$env:Path += ";$env:USERPROFILE\.fly\bin"
+fly version
+```
 
-- Open the Vercel URL → submit test feedback
-- `/admin/login` with your `ADMIN_USERNAME` / `ADMIN_PASSWORD`
-- Dashboard live updates (Socket.IO) should work if `VITE_SOCKET_URL` matches the API host
+### Deploy
+
+```bash
+cd backend
+fly auth login
+fly launch --no-deploy
+# Accept defaults or rename app; region e.g. iad (Virginia) — close to Neon us-east-1
+```
+
+Set secrets (paste your real values):
+
+```bash
+fly secrets set \
+  DATABASE_URL="postgresql://...@ep-xxx-pooler....neon.tech/neondb?sslmode=require" \
+  DIRECT_URL="postgresql://...@ep-xxx....neon.tech/neondb?sslmode=require" \
+  JWT_SECRET="your-32-char-or-longer-secret" \
+  ADMIN_USERNAME="mlsa-admin" \
+  ADMIN_PASSWORD="your-strong-password" \
+  CORS_ORIGIN="https://your-frontend.vercel.app" \
+  IP_HASH_SALT="your-unique-salt"
+```
+
+Optional Cloudinary:
+
+```bash
+fly secrets set CLOUDINARY_CLOUD_NAME="..." CLOUDINARY_API_KEY="..." CLOUDINARY_API_SECRET="..."
+```
+
+Deploy:
+
+```bash
+fly deploy
+fly open /health
+```
+
+API URL: `https://mlsa-feedback-api.fly.dev` (or your chosen app name).
+
+Config files: `backend/fly.toml`, `backend/Dockerfile`.
+
+### Fly free-tier tips
+
+- `min_machines_running = 0` in `fly.toml` — machine **stops when idle** (saves credits); first hit wakes it (~few seconds).
+- For always-on, set `min_machines_running = 1` (uses more of free allowance).
+- Check usage: `fly dashboard` → **Billing**.
 
 ---
 
-## 4. Post-deploy checklist
+## 2. Deploy API on Koyeb (alternative, no Docker required)
 
-- [ ] Rotate Neon DB password if it was ever shared in chat/commits
-- [ ] Change admin password from local dev defaults
-- [ ] Confirm `NODE_ENV=production` on Render
-- [ ] Run `npm test` in `backend` locally before future releases
-- [ ] Optional: custom domain on Vercel + update `CORS_ORIGIN`
+1. [Koyeb](https://app.koyeb.com) → **Create App** → **GitHub** → this repo
+2. **Builder:** Node.js | **Root directory:** `backend`
+3. **Build:** `npm install && npm run db:deploy`
+4. **Run:** `npm start`
+5. **Port:** `5000` | **Health check:** `/health`
+6. Add env vars (same as Fly secrets table above)
+7. Deploy → URL like `https://your-app-xxx.koyeb.app`
 
----
-
-## 5. Alternative hosts
-
-| API | Frontend |
-|-----|----------|
-| [Railway](https://railway.app) | Vercel |
-| [Fly.io](https://fly.io) | Netlify (add `_redirects`: `/* /index.html 200`) |
-| Render static site | Same Render account |
-
-Railway/Fly: use `backend` folder, `npm run db:deploy` in build, `npm start`, same env vars.
+Free **Nano** instance: one service per account; good for chapter traffic.
 
 ---
 
-## 6. Troubleshooting
+## 3. Deploy frontend (Vercel — free)
+
+1. [vercel.com](https://vercel.com) → import repo → **Root:** `frontend`
+2. Env vars:
+
+| Variable | Example (Fly) |
+|----------|-----------------|
+| `VITE_API_URL` | `https://mlsa-feedback-api.fly.dev/api` |
+| `VITE_SOCKET_URL` | `https://mlsa-feedback-api.fly.dev` |
+
+3. Deploy → copy URL → update API `CORS_ORIGIN` to that URL (no trailing slash)
+
+### Frontend on Cloudflare Pages (also free)
+
+1. **Workers & Pages** → **Create** → connect repo
+2. **Root:** `frontend` | **Build:** `npm run build` | **Output:** `dist`
+3. Add same `VITE_*` env vars in **Settings → Environment variables**
+4. **Redirects:** add rule `/*` → `/index.html` (SPA)
+
+---
+
+## 4. Link frontend ↔ API (CORS)
+
+After you know the frontend URL:
+
+**Fly:**
+
+```bash
+fly secrets set CORS_ORIGIN="https://your-app.vercel.app"
+```
+
+**Koyeb:** update `CORS_ORIGIN` in the app env → redeploy.
+
+---
+
+## 5. Verify
+
+- [ ] `https://YOUR-API.fly.dev/health` → `{"status":"ok"}`
+- [ ] Submit feedback on the live site
+- [ ] Admin login + dashboard Socket.IO updates
+
+---
+
+## 6. Post-deploy checklist
+
+- [ ] Rotate Neon password if it was ever exposed
+- [ ] Production `ADMIN_PASSWORD` / `JWT_SECRET` (not dev defaults)
+- [ ] `NODE_ENV=production` (set in Fly/Koyeb/Dockerfile)
+
+---
+
+## 7. Render (optional)
+
+If you still prefer Render, use [`render.yaml`](../render.yaml) in the repo root. Expect **cold starts** on the free plan.
+
+---
+
+## 8. Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| CORS error in browser | `CORS_ORIGIN` must exactly match frontend origin (scheme + host, no path) |
-| API 502 / slow wake | Render free cold start; retry or upgrade plan |
-| Admin login fails | Check `ADMIN_*` env; admin is seeded on first boot if missing in DB |
-| Socket not updating | `VITE_SOCKET_URL` must be API origin; JWT required (log in as admin) |
-| Migrate fails on build | Verify `DIRECT_URL` (non-pooler host) in Render env |
-| Attachment upload fails | Set Cloudinary vars or submit without attachment |
+| CORS error | `CORS_ORIGIN` = exact frontend origin |
+| Fly app won't start | `fly logs` — often missing `DATABASE_URL` / `DIRECT_URL` |
+| Migrate fails | `DIRECT_URL` must be non-pooler Neon host |
+| Socket dead | `VITE_SOCKET_URL` = API origin (no `/api` path) |
+| Slow first request | Fly/Koyeb idle wake — normal on free tier |
 
 ---
 
-## 7. CI (optional)
+## 9. CI
 
-GitHub Actions runs backend tests on push/PR (see `.github/workflows/ci.yml`).
+GitHub Actions runs `backend` tests on push/PR (`.github/workflows/ci.yml`).
