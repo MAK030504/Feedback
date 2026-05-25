@@ -2,9 +2,11 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { app } from "./app.js";
 import { env } from "./config/env.js";
+import { validateProductionEnv } from "./config/validate-env.js";
 import { prisma } from "./prisma/client.js";
 import { ensureAdminSeeded } from "./services/admin-bootstrap.service.js";
 import { setIo } from "./services/socket.service.js";
+import { verifyAdminToken } from "./utils/jwt.js";
 
 const httpServer = createServer(app);
 
@@ -15,8 +17,15 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  socket.on("admin:subscribe", () => {
-    socket.join("admins");
+  socket.on("admin:subscribe", (payload) => {
+    const token = payload?.token ?? socket.handshake.auth?.token;
+
+    try {
+      verifyAdminToken(token);
+      socket.join("admins");
+    } catch {
+      socket.emit("admin:error", { message: "Unauthorized" });
+    }
   });
 });
 
@@ -24,6 +33,7 @@ setIo(io);
 
 const start = async () => {
   try {
+    validateProductionEnv();
     await prisma.$connect();
     await ensureAdminSeeded();
 

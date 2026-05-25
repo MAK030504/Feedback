@@ -20,3 +20,13 @@ export const generalApiLimit = rateLimit({
     message: "Rate limit exceeded.",
   },
 });
+
+export const trackRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: "Too many tracking attempts. Please try again later.",
+  },
+});

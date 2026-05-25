@@ -5,6 +5,7 @@ import { moderateSubmission } from "./moderation.service.js";
 import { uploadAttachment } from "./attachment.service.js";
 import { buildAnonymousAlias, buildTicketId } from "../utils/ticket.js";
 import { compareSecretToken, generateSecretToken, hashIp } from "../utils/security.js";
+import { stripSensitiveFeedbackFields } from "../utils/feedback-privacy.js";
 
 const feedbackPublicSelect = {
   ticketId: true,
@@ -51,6 +52,7 @@ const adminFeedbackSelect = {
   isPublic: true,
   anonymousAlias: true,
   internalNotes: true,
+  aiFlags: true,
   createdAt: true,
   updatedAt: true,
   _count: {
@@ -61,7 +63,7 @@ const adminFeedbackSelect = {
   },
 };
 
-const toAdminFilter = ({ status, type, category, search }) => {
+const toAdminFilter = ({ status, type, category, search, needsReview }) => {
   const where = {};
 
   if (status) {
@@ -74,6 +76,13 @@ const toAdminFilter = ({ status, type, category, search }) => {
 
   if (category) {
     where.category = category;
+  }
+
+  if (needsReview) {
+    where.aiFlags = {
+      path: ["needsManualReview"],
+      equals: true,
+    };
   }
 
   if (search) {
@@ -157,8 +166,7 @@ export const getFeedbackForTicket = async ({ ticketId, secretToken }) => {
     return false;
   }
 
-  const { id: _id, secretToken: _secretToken, ...publicFeedback } = feedback;
-  return publicFeedback;
+  return stripSensitiveFeedbackFields(feedback);
 };
 
 export const addUserMessage = async ({ ticketId, secretToken, message }) => {

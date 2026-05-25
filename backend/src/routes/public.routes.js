@@ -8,7 +8,7 @@ import {
   upvotePublicSuggestion,
 } from "../controllers/public.controller.js";
 import { validate } from "../middleware/validate.js";
-import { submissionRateLimit } from "../middleware/rate-limit.js";
+import { submissionRateLimit, trackRateLimit } from "../middleware/rate-limit.js";
 import { uploadAttachment } from "../middleware/upload.js";
 import {
   addMessageSchema,
@@ -26,8 +26,8 @@ router.post(
   submitFeedback,
 );
 
-router.get("/track/:ticketId", trackTicket);
-router.post("/track/:ticketId/messages", validate(addMessageSchema), addTicketMessage);
+router.get("/track/:ticketId", trackRateLimit, trackTicket);
+router.post("/track/:ticketId/messages", trackRateLimit, validate(addMessageSchema), addTicketMessage);
 
 router.get("/suggestions", getPublicSuggestions);
 router.post("/suggestions/:id/upvote", submissionRateLimit, upvotePublicSuggestion);

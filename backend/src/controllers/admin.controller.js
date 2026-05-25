@@ -26,6 +26,20 @@ const listQuerySchema = z.object({
     ])
     .optional(),
   search: z.string().optional(),
+  needsReview: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((value) => {
+      if (value === undefined) {
+        return undefined;
+      }
+
+      if (typeof value === "boolean") {
+        return value;
+      }
+
+      return value.toLowerCase() === "true";
+    }),
 });
 
 const idParamSchema = z.object({
@@ -44,6 +58,7 @@ export const getAdminFeedbackList = async (request, response, next) => {
         type: query.type,
         category: query.category,
         search: query.search,
+        needsReview: query.needsReview,
       },
     });
 

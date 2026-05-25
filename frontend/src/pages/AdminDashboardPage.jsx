@@ -18,6 +18,7 @@ import {
 } from "../utils/constants";
 import { StatusBadge } from "../components/StatusBadge";
 import { StatCard } from "../components/StatCard";
+import { ModerationBadge, ModerationPanel } from "../components/ModerationBadge";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 import {
   Bar,
@@ -39,10 +40,11 @@ const initialFilters = {
   status: "",
   category: "",
   search: "",
+  needsReview: "",
 };
 
 export const AdminDashboardPage = () => {
-  const { signOut } = useAdminAuth();
+  const { signOut, token } = useAdminAuth();
   const [filters, setFilters] = useState(initialFilters);
   const [page, setPage] = useState(1);
   const [feedbackList, setFeedbackList] = useState(null);
@@ -102,11 +104,19 @@ export const AdminDashboardPage = () => {
   useEffect(() => {
     loadAnalytics();
 
+    if (!token) {
+      return undefined;
+    }
+
     const socket = io(socketUrl, {
       transports: ["websocket"],
+      auth: { token },
     });
 
-    socket.emit("admin:subscribe");
+    socket.emit("admin:subscribe", { token });
+    socket.on("admin:error", () => {
+      toast.error("Live updates unauthorized. Please log in again.");
+    });
     socket.on("feedback:new", () => {
       loadList();
       loadAnalytics();
@@ -125,7 +135,7 @@ export const AdminDashboardPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, [loadAnalytics, loadDetail, loadList, selectedId]);
+  }, [loadAnalytics, loadDetail, loadList, selectedId, token]);
 
   const statusMap = useMemo(() => {
     if (!analytics) return {};
@@ -257,7 +267,7 @@ export const AdminDashboardPage = () => {
 
       <section className="grid gap-5 xl:grid-cols-[3fr_2fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="mb-4 grid gap-2 md:grid-cols-4">
+          <div className="mb-4 grid gap-2 md:grid-cols-5">
             <select
               value={filters.type}
               onChange={(event) => {
@@ -315,6 +325,18 @@ export const AdminDashboardPage = () => {
               placeholder="Search..."
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
             />
+
+            <select
+              value={filters.needsReview}
+              onChange={(event) => {
+                setPage(1);
+                setFilters((prev) => ({ ...prev, needsReview: event.target.value }));
+              }}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            >
+              <option value="">All moderation</option>
+              <option value="true">Needs review only</option>
+            </select>
           </div>
 
           <div className="overflow-x-auto">
@@ -335,7 +357,12 @@ export const AdminDashboardPage = () => {
                     onClick={() => loadDetail(item.id)}
                     className="cursor-pointer border-t border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
                   >
-                    <td className="px-2 py-2 font-medium">{item.ticketId}</td>
+                    <td className="px-2 py-2 font-medium">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span>{item.ticketId}</span>
+                        <ModerationBadge aiFlags={item.aiFlags} />
+                      </div>
+                    </td>
                     <td className="px-2 py-2">{formatEnum(item.type)}</td>
                     <td className="px-2 py-2">{formatEnum(item.category)}</td>
                     <td className="px-2 py-2">
@@ -380,9 +407,14 @@ export const AdminDashboardPage = () => {
           ) : (
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold">{selectedDetail.ticketId}</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-semibold">{selectedDetail.ticketId}</h3>
+                  <ModerationBadge aiFlags={selectedDetail.aiFlags} />
+                </div>
                 <p className="text-sm text-slate-500">{selectedDetail.anonymousAlias}</p>
               </div>
+
+              <ModerationPanel aiFlags={selectedDetail.aiFlags} />
 
               <p className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800">{selectedDetail.description}</p>
 

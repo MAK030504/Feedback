@@ -1,5 +1,4 @@
-import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
+import { verifyAdminToken } from "../utils/jwt.js";
 
 export const authenticateAdmin = (request, response, next) => {
   const authHeader = request.headers.authorization;
@@ -11,8 +10,7 @@ export const authenticateAdmin = (request, response, next) => {
   const token = authHeader.replace("Bearer ", "").trim();
 
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET);
-    request.admin = payload;
+    request.admin = verifyAdminToken(token);
     return next();
   } catch {
     return response.status(401).json({ message: "Invalid or expired token" });

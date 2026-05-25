@@ -4,11 +4,18 @@
   "description": "Backend for MLSA Anonymous Feedback System",
   "type": "module",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "test": "node --test tests/**/*.test.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio"
   },
   "keywords": [

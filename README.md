@@ -67,16 +67,31 @@ backend/
 9. AI moderation scaffold service for future extensibility
 10. Security hardening middleware and upload validation
 
-## Backend setup
+## Database (Neon PostgreSQL)
+
+The schema lives in `backend/prisma/schema.prisma`. Migrations are in `backend/prisma/migrations/`.
+
+### 1. Create a Neon project
+
+1. Sign in at [https://neon.tech](https://neon.tech) and create a project (e.g. `mlsa-feedback`).
+2. Open **Dashboard → your project → Connect**.
+3. Copy **both** connection strings:
+   - **Pooled connection** → `DATABASE_URL` (hostname includes `-pooler`)
+   - **Direct connection** → `DIRECT_URL` (used only by Prisma Migrate)
+
+### 2. Configure and migrate
 
 ```bash
 cd backend
 cp .env.example .env
+# Paste your Neon DATABASE_URL and DIRECT_URL into .env
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npm run db:deploy
 npm run dev
 ```
+
+`npm run db:deploy` applies migrations to Neon. For local schema changes during development, use `npm run prisma:migrate` instead.
 
 Backend runs on `http://localhost:5000`.
 
@@ -86,7 +101,8 @@ See `backend/.env.example`.
 
 Important values:
 
-- `DATABASE_URL`
+- `DATABASE_URL` (Neon pooled connection)
+- `DIRECT_URL` (Neon direct connection, for migrations)
 - `JWT_SECRET`
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
@@ -128,11 +144,19 @@ Frontend runs on `http://localhost:5173`.
 
 - `helmet` for secure HTTP headers
 - strict CORS origin
-- endpoint rate limiting
+- endpoint rate limiting (including dedicated limits on ticket tracking)
 - Zod request validation
 - upload type and size validation
-- JWT auth for admin endpoints only
+- JWT auth for admin endpoints and Socket.IO live updates
+- production env validation (rejects weak default secrets)
 - no PII fields in data model
+
+Run backend tests:
+
+```bash
+cd backend
+npm test
+```
 
 ## AI moderation scaffold
 
@@ -144,3 +168,13 @@ The backend includes `moderation.service.js` with hook points for:
 - duplicate grouping
 
 You can replace scaffold logic with an external AI moderation provider later.
+
+## Deployment
+
+Neon is the database. Deploy the API and frontend separately:
+
+1. **API** — [Render](https://render.com) using [`render.yaml`](render.yaml) (root: `backend`)
+2. **Frontend** — [Vercel](https://vercel.com) (root: `frontend`, env: `VITE_API_URL`, `VITE_SOCKET_URL`)
+3. Set `CORS_ORIGIN` on the API to your Vercel URL
+
+Full walkthrough: **[docs/DEPLOY.md](docs/DEPLOY.md)**
