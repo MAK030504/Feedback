@@ -7,6 +7,7 @@ import {
   listPublicSuggestions,
   upvoteSuggestion,
 } from "../services/feedback.service.js";
+import { notifyAdminsOfNewSubmission } from "../services/admin-notify.service.js";
 import { emitAdminUpdate } from "../services/socket.service.js";
 import { trackTicketSchema } from "../utils/validators.js";
 
@@ -22,15 +23,29 @@ export const submitFeedback = async (request, response, next) => {
       request,
     });
 
-    emitAdminUpdate("feedback:new", {
-      ticketId: data.ticketId,
-      type: request.body.type,
-      category: request.body.category,
-    });
+    const { id, ...receipt } = data;
+    const submissionType = request.body.type;
+
+    if (submissionType === "complaint" || submissionType === "suggestion") {
+      const adminPayload = {
+        id,
+        ticketId: data.ticketId,
+        type: submissionType,
+        category: request.body.category,
+        title: request.body.title,
+      };
+
+      emitAdminUpdate("feedback:new", adminPayload);
+
+      void notifyAdminsOfNewSubmission(adminPayload).catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(`Admin notification failed (${error.channel ?? "unknown"}):`, error.message);
+      });
+    }
 
     response.status(201).json({
       message: "Feedback submitted anonymously.",
-      data,
+      data: receipt,
     });
   } catch (error) {
     next(error);

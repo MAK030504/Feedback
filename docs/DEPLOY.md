@@ -90,6 +90,24 @@ Optional Cloudinary:
 fly secrets set CLOUDINARY_CLOUD_NAME="..." CLOUDINARY_API_KEY="..." CLOUDINARY_API_SECRET="..."
 ```
 
+Optional admin alerts when a **complaint** or **suggestion** is submitted (Discord, email, or both):
+
+```bash
+# Discord — create a webhook in your server (Integrations → Webhooks)
+fly secrets set DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+
+# Email — SMTP + one or more recipients (comma-separated)
+fly secrets set \
+  ADMIN_NOTIFY_EMAIL="lead@example.com,ops@example.com" \
+  ADMIN_DASHBOARD_URL="https://your-app.vercel.app/admin" \
+  SMTP_HOST="smtp.gmail.com" \
+  SMTP_PORT="587" \
+  SMTP_SECURE="false" \
+  SMTP_USER="your@gmail.com" \
+  SMTP_PASS="your-app-password" \
+  SMTP_FROM="MLSA Feedback <your@gmail.com>"
+```
+
 Deploy:
 
 ```bash

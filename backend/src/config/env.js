@@ -22,6 +22,15 @@ export const env = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ?? "",
   SUBMISSION_RATE_LIMIT_WINDOW_MS: toNumber(process.env.SUBMISSION_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
   SUBMISSION_RATE_LIMIT_MAX: toNumber(process.env.SUBMISSION_RATE_LIMIT_MAX, 8),
+  DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL ?? "",
+  ADMIN_NOTIFY_EMAIL: process.env.ADMIN_NOTIFY_EMAIL ?? "",
+  ADMIN_DASHBOARD_URL: process.env.ADMIN_DASHBOARD_URL ?? "",
+  SMTP_HOST: process.env.SMTP_HOST ?? "",
+  SMTP_PORT: toNumber(process.env.SMTP_PORT, 587),
+  SMTP_SECURE: process.env.SMTP_SECURE === "true",
+  SMTP_USER: process.env.SMTP_USER ?? "",
+  SMTP_PASS: process.env.SMTP_PASS ?? "",
+  SMTP_FROM: process.env.SMTP_FROM ?? "MLSA Feedback <noreply@localhost>",
 };
 
 export const isProduction = env.NODE_ENV === "production";

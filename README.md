@@ -30,6 +30,7 @@ Private internal platform for **Microsoft Learn Student Ambassadors (MLSA) GIKI 
 - Helmet, CORS, rate limiting, Zod validation
 - Multer + Cloudinary (optional attachment upload)
 - Socket.IO for admin live updates
+- Optional Discord webhook / SMTP email alerts for new complaints and suggestions
 
 ## Project structure
 
@@ -108,6 +109,7 @@ Important values:
 - `ADMIN_PASSWORD`
 - `CORS_ORIGIN`
 - Cloudinary keys (if attachments enabled)
+- Optional admin alerts: `DISCORD_WEBHOOK_URL` and/or SMTP + `ADMIN_NOTIFY_EMAIL` (see `backend/.env.example`)
 
 ## Frontend setup
 

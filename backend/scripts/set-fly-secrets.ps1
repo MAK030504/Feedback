@@ -31,17 +31,36 @@ if (-not $cors) { $cors = "http://localhost:5173" }
 $fly = Join-Path $env:USERPROFILE ".fly\bin\flyctl.exe"
 if (-not (Test-Path $fly)) { $fly = "flyctl" }
 
-& $fly secrets set `
-  DATABASE_URL=$($vars["DATABASE_URL"]) `
-  DIRECT_URL=$($vars["DIRECT_URL"]) `
-  JWT_SECRET=$jwt `
-  JWT_EXPIRES_IN=12h `
-  ADMIN_USERNAME=$($vars["ADMIN_USERNAME"]) `
-  ADMIN_PASSWORD=$adminPass `
-  CORS_ORIGIN=$cors `
-  IP_HASH_SALT=$ipSalt `
-  SUBMISSION_RATE_LIMIT_WINDOW_MS=900000 `
-  SUBMISSION_RATE_LIMIT_MAX=8
+$secretArgs = @(
+  "DATABASE_URL=$($vars["DATABASE_URL"])",
+  "DIRECT_URL=$($vars["DIRECT_URL"])",
+  "JWT_SECRET=$jwt",
+  "JWT_EXPIRES_IN=12h",
+  "ADMIN_USERNAME=$($vars["ADMIN_USERNAME"])",
+  "ADMIN_PASSWORD=$adminPass",
+  "CORS_ORIGIN=$cors",
+  "IP_HASH_SALT=$ipSalt",
+  "SUBMISSION_RATE_LIMIT_WINDOW_MS=900000",
+  "SUBMISSION_RATE_LIMIT_MAX=8"
+)
+
+foreach ($optional in @(
+  "DISCORD_WEBHOOK_URL",
+  "ADMIN_NOTIFY_EMAIL",
+  "ADMIN_DASHBOARD_URL",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_SECURE",
+  "SMTP_USER",
+  "SMTP_PASS",
+  "SMTP_FROM"
+)) {
+  if ($vars[$optional]) {
+    $secretArgs += "$optional=$($vars[$optional])"
+  }
+}
+
+& $fly secrets set @secretArgs
 
 $notes = @"
 Fly secrets updated.

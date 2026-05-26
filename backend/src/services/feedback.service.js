@@ -140,6 +140,7 @@ export const createFeedbackSubmission = async ({ payload, file, request }) => {
   });
 
   return {
+    id: createdFeedback.id,
     ticketId: createdFeedback.ticketId,
     secretToken: plainToken,
     anonymousAlias: createdFeedback.anonymousAlias,

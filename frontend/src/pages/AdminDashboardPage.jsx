@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { io } from "socket.io-client";
 import {
   fetchAdminFeedback,
   fetchAdminFeedbackDetail,
@@ -20,6 +19,11 @@ import { StatusBadge } from "../components/StatusBadge";
 import { StatCard } from "../components/StatCard";
 import { ModerationBadge, ModerationPanel } from "../components/ModerationBadge";
 import { useAdminAuth } from "../hooks/useAdminAuth";
+import { useAdminLiveUpdates } from "../hooks/useAdminLiveUpdates";
+import {
+  getAdminNotificationPermission,
+  requestAdminNotificationPermission,
+} from "../utils/adminNotifications";
 import {
   Bar,
   BarChart,
@@ -32,8 +36,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const socketUrl = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:5000";
 
 const initialFilters = {
   type: "",
@@ -58,6 +60,9 @@ export const AdminDashboardPage = () => {
     priority: "medium",
     isPublic: false,
   });
+  const [notificationPermission, setNotificationPermission] = useState(() =>
+    getAdminNotificationPermission(),
+  );
 
   const loadList = useCallback(async () => {
     try {
@@ -109,39 +114,42 @@ export const AdminDashboardPage = () => {
 
   useEffect(() => {
     loadAnalytics();
+  }, [loadAnalytics]);
 
-    if (!token) {
-      return undefined;
+  const handleOpenTicket = useCallback(
+    (payload) => {
+      if (payload?.id) {
+        loadDetail(payload.id);
+      }
+    },
+    [loadDetail],
+  );
+
+  const { isLive } = useAdminLiveUpdates({
+    token,
+    selectedId,
+    onRefreshList: loadList,
+    onRefreshAnalytics: loadAnalytics,
+    onRefreshDetail: loadDetail,
+    onOpenTicket: handleOpenTicket,
+  });
+
+  const handleEnableAlerts = async () => {
+    const permission = await requestAdminNotificationPermission();
+    setNotificationPermission(permission);
+
+    if (permission === "granted") {
+      toast.success("Desktop alerts enabled for new complaints and suggestions.");
+      return;
     }
 
-    const socket = io(socketUrl, {
-      transports: ["websocket"],
-      auth: { token },
-    });
+    if (permission === "denied") {
+      toast.error("Notifications blocked in your browser settings.");
+      return;
+    }
 
-    socket.emit("admin:subscribe", { token });
-    socket.on("admin:error", () => {
-      toast.error("Live updates unauthorized. Please log in again.");
-    });
-    socket.on("feedback:new", () => {
-      loadList();
-      loadAnalytics();
-    });
-    socket.on("feedback:updated", () => {
-      loadList();
-      loadAnalytics();
-    });
-    socket.on("feedback:message", () => {
-      loadList();
-      if (selectedId) {
-        loadDetail(selectedId);
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [loadAnalytics, loadDetail, loadList, selectedId, token]);
+    toast("Alerts stay as in-app toasts unless desktop permission is granted.");
+  };
 
   const statusMap = useMemo(() => {
     if (!analytics) return {};
@@ -210,10 +218,33 @@ export const AdminDashboardPage = () => {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
-          <h2 className="text-2xl font-semibold">Admin Dashboard</h2>
-          <p className="text-sm text-slate-500">Monitor anonymous MLSA feedback and resolve issues securely.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-2xl font-semibold">Admin Dashboard</h2>
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                isLive
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+              }`}
+            >
+              {isLive ? "Live" : "Offline"}
+            </span>
+          </div>
+          <p className="text-sm text-slate-500">
+            Monitor anonymous MLSA feedback and resolve issues securely. New complaints and suggestions ping here in
+            real time.
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {notificationPermission !== "granted" && notificationPermission !== "unsupported" ? (
+            <button
+              type="button"
+              onClick={handleEnableAlerts}
+              className="rounded-lg border border-sky-400 px-3 py-2 text-sm text-sky-600 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-900/20"
+            >
+              Enable desktop alerts
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleExport}
