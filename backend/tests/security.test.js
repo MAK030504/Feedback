@@ -6,9 +6,8 @@ describe("ticket secret tokens", () => {
   it("generates tokens that validate with bcrypt", async () => {
     const { plainToken, hashedToken } = await generateSecretToken();
 
-    assert.equal(typeof plainToken, "string");
-    assert.equal(plainToken.length >= 16, true);
+    assert.match(plainToken, /^\d{4}$/);
     assert.equal(await compareSecretToken(plainToken, hashedToken), true);
-    assert.equal(await compareSecretToken("wrong-token", hashedToken), false);
+    assert.equal(await compareSecretToken("0000", hashedToken), false);
   });
 });

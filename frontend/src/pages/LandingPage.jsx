@@ -30,7 +30,7 @@ export const LandingPage = () => {
 
         <ul className="mt-6 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <li>• No name, email, roll number, or login required.</li>
-          <li>• Each submission receives a ticket ID and private secret token.</li>
+          <li>• Each submission receives a ticket ID and private 4-digit access code.</li>
           <li>• Admin panel is restricted to MLSA leadership only.</li>
         </ul>
       </section>

@@ -33,12 +33,16 @@ export const createFeedbackSchema = z.object({
     }),
 });
 
+export const ticketAccessTokenSchema = z
+  .string()
+  .regex(/^\d{4}$/, "Access token must be a 4-digit code");
+
 export const trackTicketSchema = z.object({
-  token: z.string().min(8),
+  token: ticketAccessTokenSchema,
 });
 
 export const addMessageSchema = z.object({
-  token: z.string().min(8),
+  token: ticketAccessTokenSchema,
   message: z.string().min(2).max(4000),
 });
 

@@ -53,8 +53,12 @@ export const TrackTicketPage = () => {
           />
           <input
             value={token}
-            onChange={(event) => setToken(event.target.value)}
-            placeholder="Secret access token"
+            onChange={(event) => setToken(event.target.value.replace(/\D/g, "").slice(0, 4))}
+            placeholder="4-digit access code"
+            inputMode="numeric"
+            pattern="\d{4}"
+            maxLength={4}
+            autoComplete="off"
             className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
             required
           />

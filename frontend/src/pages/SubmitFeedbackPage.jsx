@@ -153,7 +153,7 @@ export const SubmitFeedbackPage = () => {
       <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h3 className="text-lg font-semibold">After submission</h3>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          You will receive a ticket ID and secret token. Save both to track updates and continue anonymous
+          You will receive a ticket ID and 4-digit access code. Save both to track updates and continue anonymous
           conversation.
         </p>
 
@@ -163,7 +163,7 @@ export const SubmitFeedbackPage = () => {
               <strong>Ticket ID:</strong> {receipt.ticketId}
             </p>
             <p className="mt-1 break-all">
-              <strong>Secret Token:</strong> {receipt.secretToken}
+              <strong>Access Code:</strong> {receipt.secretToken}
             </p>
             <p className="mt-1">
               <strong>Alias:</strong> {receipt.anonymousAlias}

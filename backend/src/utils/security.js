@@ -8,7 +8,7 @@ export const hashIp = (request) => {
 };
 
 export const generateSecretToken = async () => {
-  const plainToken = crypto.randomBytes(16).toString("hex");
+  const plainToken = String(crypto.randomInt(0, 10_000)).padStart(4, "0");
   const hashedToken = await bcrypt.hash(plainToken, 10);
 
   return { plainToken, hashedToken };
