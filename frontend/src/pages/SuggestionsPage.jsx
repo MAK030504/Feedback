@@ -80,7 +80,7 @@ export const SuggestionsPage = () => {
             <button
               type="button"
               onClick={() => handleUpvote(item.id)}
-              className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+              className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-white hover:bg-sky-400"
             >
               Upvote ({item.votes})
             </button>

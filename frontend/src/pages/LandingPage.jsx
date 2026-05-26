@@ -16,13 +16,13 @@ export const LandingPage = () => {
         <div className="mt-6 grid gap-3 md:grid-cols-2">
           <Link
             to="/submit"
-            className="rounded-xl bg-indigo-600 px-4 py-3 text-center font-medium text-white hover:bg-indigo-500"
+            className="rounded-xl bg-sky-500 px-4 py-3 text-center font-medium text-white hover:bg-sky-400"
           >
             Submit Anonymous Feedback
           </Link>
           <Link
             to="/track"
-            className="rounded-xl border border-slate-300 px-4 py-3 text-center font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="rounded-xl border border-green-300 px-4 py-3 text-center font-medium text-green-800 hover:bg-green-50 dark:border-green-700 dark:text-green-200 dark:hover:bg-green-900/30"
           >
             Track Existing Ticket
           </Link>
@@ -40,7 +40,7 @@ export const LandingPage = () => {
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           Share this QR code during MLSA events for instant feedback collection.
         </p>
-        <div className="mt-4 flex justify-center rounded-xl bg-slate-100 p-4 dark:bg-slate-800">
+        <div className="mt-4 flex justify-center rounded-xl bg-sky-100 p-4 dark:bg-sky-900/40">
           <QRCodeSVG value={window.location.origin + "/submit"} size={180} />
         </div>
       </aside>

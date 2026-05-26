@@ -61,7 +61,7 @@ export const TrackTicketPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500"
+            className="rounded-lg bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-400"
           >
             {loading ? "Checking..." : "Track"}
           </button>
@@ -103,7 +103,7 @@ export const TrackTicketPage = () => {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
                   required
                 />
-                <button className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+                <button className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400">
                   Send Message
                 </button>
               </form>

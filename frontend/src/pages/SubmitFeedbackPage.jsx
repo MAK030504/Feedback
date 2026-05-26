@@ -143,7 +143,7 @@ export const SubmitFeedbackPage = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+            className="rounded-lg bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-sky-300"
           >
             {submitting ? "Submitting..." : "Submit Anonymously"}
           </button>
@@ -158,7 +158,7 @@ export const SubmitFeedbackPage = () => {
         </p>
 
         {receipt ? (
-          <div className="mt-4 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
+          <div className="mt-4 rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-900 dark:border-green-700 dark:bg-green-900/30 dark:text-green-200">
             <p>
               <strong>Ticket ID:</strong> {receipt.ticketId}
             </p>

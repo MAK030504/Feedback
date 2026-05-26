@@ -59,7 +59,7 @@ export const AdminLoginPage = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500"
+          className="w-full rounded-lg bg-sky-500 px-4 py-2 font-medium text-white hover:bg-sky-400"
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>

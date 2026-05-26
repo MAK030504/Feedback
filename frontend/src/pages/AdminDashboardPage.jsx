@@ -68,7 +68,13 @@ export const AdminDashboardPage = () => {
       });
       setFeedbackList(data);
     } catch (error) {
-      toast.error(error.response?.data?.message ?? "Failed to load feedback list");
+      const validationErrors = error.response?.data?.errors?.fieldErrors;
+      const detail = validationErrors
+        ? Object.entries(validationErrors)
+            .map(([field, messages]) => `${field}: ${messages?.join(", ")}`)
+            .join("; ")
+        : null;
+      toast.error(detail ?? error.response?.data?.message ?? "Failed to load feedback list");
     }
   }, [filters, page]);
 
@@ -218,7 +224,7 @@ export const AdminDashboardPage = () => {
           <button
             type="button"
             onClick={signOut}
-            className="rounded-lg border border-rose-400 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+            className="rounded-lg border border-red-400 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             Logout
           </button>
@@ -226,10 +232,10 @@ export const AdminDashboardPage = () => {
       </section>
 
       <section className="grid gap-3 md:grid-cols-4">
-        <StatCard label="Total Submissions" value={totalSubmissions} />
-        <StatCard label="Pending" value={statusMap.pending ?? 0} />
-        <StatCard label="Under Review" value={statusMap.under_review ?? 0} />
-        <StatCard label="Resolved" value={statusMap.resolved ?? 0} />
+        <StatCard label="Total Submissions" value={totalSubmissions} accent="blue" />
+        <StatCard label="Pending" value={statusMap.pending ?? 0} accent="yellow" />
+        <StatCard label="Under Review" value={statusMap.under_review ?? 0} accent="blue" />
+        <StatCard label="Resolved" value={statusMap.resolved ?? 0} accent="green" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -242,7 +248,7 @@ export const AdminDashboardPage = () => {
                 <XAxis dataKey="month" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} />
+                <Line type="monotone" dataKey="count" stroke="#38bdf8" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -258,7 +264,7 @@ export const AdminDashboardPage = () => {
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="count" fill="#14b8a6" />
+                <Bar dataKey="count" fill="#22c55e" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -476,7 +482,7 @@ export const AdminDashboardPage = () => {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                 />
 
-                <button className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+                <button className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-white hover:bg-sky-400">
                   Save Updates
                 </button>
               </form>

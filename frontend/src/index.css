@@ -2,8 +2,23 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-brand-blue: #7dd3fc;
+  --color-brand-blue-dark: #0ea5e9;
+  --color-brand-red: #f87171;
+  --color-brand-red-dark: #ef4444;
+  --color-brand-yellow: #fde047;
+  --color-brand-yellow-dark: #eab308;
+  --color-brand-green: #86efac;
+  --color-brand-green-dark: #22c55e;
+}
+
 :root {
   color-scheme: light;
+  --accent-blue: #38bdf8;
+  --accent-red: #ef4444;
+  --accent-yellow: #eab308;
+  --accent-green: #22c55e;
 }
 
 .dark {
@@ -14,7 +29,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-sky-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
 }
 
 * {
@@ -22,5 +37,5 @@ body {
 }
 
 a {
-  @apply text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300;
+  @apply text-sky-600 hover:text-sky-500 dark:text-sky-400 dark:hover:text-sky-300;
 }

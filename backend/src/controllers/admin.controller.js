@@ -10,36 +10,55 @@ import {
 import { toCsv } from "../utils/csv.js";
 import { emitAdminUpdate } from "../services/socket.service.js";
 
+const emptyToUndefined = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  return value;
+};
+
 const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(5).max(100).default(10),
-  status: z.enum(["pending", "under_review", "resolved", "rejected"]).optional(),
-  type: z.enum(["complaint", "suggestion", "feedback"]).optional(),
-  category: z
-    .enum([
-      "event_management",
-      "team_coordination",
-      "leadership_issue",
-      "technical_workshop",
-      "communication",
-      "other",
-    ])
-    .optional(),
-  search: z.string().optional(),
-  needsReview: z
-    .union([z.boolean(), z.string()])
-    .optional()
-    .transform((value) => {
-      if (value === undefined) {
-        return undefined;
-      }
+  status: z.preprocess(
+    emptyToUndefined,
+    z.enum(["pending", "under_review", "resolved", "rejected"]).optional(),
+  ),
+  type: z.preprocess(emptyToUndefined, z.enum(["complaint", "suggestion", "feedback"]).optional()),
+  category: z.preprocess(
+    emptyToUndefined,
+    z
+      .enum([
+        "event_management",
+        "team_coordination",
+        "leadership_issue",
+        "technical_workshop",
+        "communication",
+        "other",
+      ])
+      .optional(),
+  ),
+  search: z.preprocess((value) => {
+    const normalized = emptyToUndefined(value);
+    if (typeof normalized === "string" && normalized.trim() === "") {
+      return undefined;
+    }
 
-      if (typeof value === "boolean") {
-        return value;
-      }
+    return normalized;
+  }, z.string().optional()),
+  needsReview: z.preprocess((value) => {
+    const normalized = emptyToUndefined(value);
+    if (normalized === undefined) {
+      return undefined;
+    }
 
-      return value.toLowerCase() === "true";
-    }),
+    if (typeof normalized === "boolean") {
+      return normalized;
+    }
+
+    return String(normalized).toLowerCase() === "true";
+  }, z.boolean().optional()),
 });
 
 const idParamSchema = z.object({

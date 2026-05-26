@@ -5,8 +5,13 @@ export const loginAdmin = async (username, password) => {
   return data;
 };
 
+const cleanQueryParams = (params) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== "" && value !== undefined && value !== null),
+  );
+
 export const fetchAdminFeedback = async (params) => {
-  const { data } = await adminApi.get("/feedback", { params });
+  const { data } = await adminApi.get("/feedback", { params: cleanQueryParams(params) });
   return data.data;
 };
 
