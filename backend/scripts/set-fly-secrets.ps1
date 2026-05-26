@@ -46,6 +46,8 @@ $secretArgs = @(
 
 foreach ($optional in @(
   "DISCORD_WEBHOOK_URL",
+  "DISCORD_MENTION_USER_IDS",
+  "DISCORD_MENTION_ROLE_IDS",
   "ADMIN_NOTIFY_EMAIL",
   "ADMIN_DASHBOARD_URL",
   "SMTP_HOST",

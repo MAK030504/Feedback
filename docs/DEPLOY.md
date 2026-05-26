@@ -96,6 +96,9 @@ Optional admin alerts when a **complaint** or **suggestion** is submitted (Disco
 # Discord — create a webhook in your server (Integrations → Webhooks)
 fly secrets set DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 
+# Optional @mentions — comma-separated user/role IDs (Developer Mode → Copy User/Role ID)
+fly secrets set DISCORD_MENTION_USER_IDS="123456789012345678" DISCORD_MENTION_ROLE_IDS=""
+
 # Email — SMTP + one or more recipients (comma-separated)
 fly secrets set \
   ADMIN_NOTIFY_EMAIL="lead@example.com,ops@example.com" \

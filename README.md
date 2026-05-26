@@ -109,7 +109,7 @@ Important values:
 - `ADMIN_PASSWORD`
 - `CORS_ORIGIN`
 - Cloudinary keys (if attachments enabled)
-- Optional admin alerts: `DISCORD_WEBHOOK_URL` and/or SMTP + `ADMIN_NOTIFY_EMAIL` (see `backend/.env.example`)
+- Optional admin alerts: `DISCORD_WEBHOOK_URL` (with optional `DISCORD_MENTION_USER_IDS` / `DISCORD_MENTION_ROLE_IDS` to @ people in Discord) and/or SMTP + `ADMIN_NOTIFY_EMAIL` (see `backend/.env.example`)
 
 ## Frontend setup
 

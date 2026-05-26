@@ -43,6 +43,40 @@ const discordColor = (type) => {
 
 const isDiscordConfigured = () => Boolean(env.DISCORD_WEBHOOK_URL?.trim());
 
+const parseDiscordIdList = (raw) =>
+  (raw ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((id) => /^\d{17,20}$/.test(id));
+
+/** @returns {{ content: string, allowed_mentions: object } | null} */
+export const buildDiscordMentionPayload = () => {
+  const userIds = parseDiscordIdList(env.DISCORD_MENTION_USER_IDS);
+  const roleIds = parseDiscordIdList(env.DISCORD_MENTION_ROLE_IDS);
+
+  if (userIds.length === 0 && roleIds.length === 0) {
+    return null;
+  }
+
+  const mentionText = [
+    ...userIds.map((id) => `<@${id}>`),
+    ...roleIds.map((id) => `<@&${id}>`),
+  ].join(" ");
+
+  const allowedMentions = { parse: [] };
+  if (userIds.length > 0) {
+    allowedMentions.users = userIds;
+  }
+  if (roleIds.length > 0) {
+    allowedMentions.roles = roleIds;
+  }
+
+  return {
+    content: mentionText,
+    allowed_mentions: allowedMentions,
+  };
+};
+
 const isEmailConfigured = () =>
   Boolean(env.ADMIN_NOTIFY_EMAIL?.trim() && env.SMTP_HOST?.trim() && env.SMTP_USER?.trim() && env.SMTP_PASS?.trim());
 
@@ -90,13 +124,21 @@ const sendDiscordNotification = async (submission) => {
     embed.description = `[Open admin dashboard](${dashboardLink})`;
   }
 
+  const mentions = buildDiscordMentionPayload();
+  const payload = {
+    username: "MLSA Feedback",
+    embeds: [embed],
+  };
+
+  if (mentions) {
+    payload.content = `${mentions.content}\n**${headline}** — new submission needs review.`;
+    payload.allowed_mentions = mentions.allowed_mentions;
+  }
+
   const response = await fetch(env.DISCORD_WEBHOOK_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "MLSA Feedback",
-      embeds: [embed],
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
